@@ -1,0 +1,60 @@
+version: "3.8"
+services:
+  mariadb:
+    image: mariadb:10.2
+    environment:
+      - MYSQL_ROOT_PASSWORD=magento
+      - MYSQL_USER=magento
+      - MYSQL_PASSWORD=magento
+    ports:
+      - "13306:3306"
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 2048M
+    volumes:
+      - mariadb:/var/lib/mysql
+    networks:
+      - mariadb
+  elasticsearch:
+    image: docker.elastic.co/elasticsearch/elasticsearch:7.8.1
+    deploy:
+      resources:
+        limits:
+          cpus: "2"
+          memory: 1576M
+    environment:
+      - discovery.type=single-node
+      - "ES_JAVA_OPTS=-Xms512m -Xmx512m"
+    networks:
+      - telmagento
+    volumes:
+      - data01:/usr/share/elasticsearch/data
+  magento:
+    image: m2.4web
+    ports:
+      - "2022:22"
+      - "8080:80"
+    deploy:
+      resources:
+        limits:
+          cpus: "4"
+          memory: 4096M
+    depends_on:
+      - elasticsearch
+      - mariadb
+    networks:
+      - telmagento
+      - mariadb
+    volumes:
+      - web:/var/www/html/shared
+      - home:/home/magento
+volumes:
+  web:
+  home:
+  data01:
+  mariadb:
+networks:
+  telmagento:
+  mariadb:
